@@ -1,4 +1,4 @@
-package com.epam.talks.github
+package com.epam.talks.github.data
 
 data class GithubUser (
 	val login : String,

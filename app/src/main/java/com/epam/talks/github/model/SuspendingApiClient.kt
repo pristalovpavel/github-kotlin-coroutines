@@ -1,7 +1,7 @@
 package com.epam.talks.github.model
 
-import com.epam.talks.github.GithubRepository
-import com.epam.talks.github.GithubUser
+import com.epam.talks.github.data.GithubRepository
+import com.epam.talks.github.data.GithubUser
 import khttp.get
 import khttp.structures.authorization.Authorization
 

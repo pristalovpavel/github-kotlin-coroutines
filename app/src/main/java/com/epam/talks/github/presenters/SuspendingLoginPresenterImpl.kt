@@ -2,8 +2,8 @@ package com.epam.talks.github.presenters
 
 import com.epam.talks.github.model.SuspendingApiClient
 import khttp.structures.authorization.BasicAuthorization
-import kotlinx.coroutines.experimental.withContext
-import kotlin.coroutines.experimental.CoroutineContext
+import kotlinx.coroutines.withContext
+import kotlin.coroutines.CoroutineContext
 
 class SuspendingLoginPresenterImpl(val apiClient: SuspendingApiClient, val context: CoroutineContext) : LoginPresenter {
 

@@ -1,7 +1,7 @@
 package com.epam.talks.github.model
 
-import com.epam.talks.github.GithubRepository
-import com.epam.talks.github.GithubUser
+import com.epam.talks.github.data.GithubRepository
+import com.epam.talks.github.data.GithubUser
 import io.reactivex.Observable
 import io.reactivex.Single
 import khttp.get
@@ -32,7 +32,7 @@ interface ApiClientRx {
 			val jsonObject = response.jsonObject
 			with(jsonObject) {
 				return@with GithubUser(getString("login"), getInt("id"),
-						getString("repos_url"), getString("name"))
+                        getString("repos_url"), getString("name"))
 			}
 		}
 

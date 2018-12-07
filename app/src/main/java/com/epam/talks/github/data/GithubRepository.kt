@@ -1,4 +1,4 @@
-package com.epam.talks.github
+package com.epam.talks.github.data
 
 data class GithubRepository(
 		val id : Int,

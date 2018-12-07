@@ -14,20 +14,15 @@ import android.view.ViewGroup
 import android.widget.TextView
 import com.epam.talks.github.model.ApiClient
 import com.epam.talks.github.model.ApiClientRx
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.schedulers.Schedulers
+import com.epam.talks.github.model.RetrofitApiClientImpl
 import io.reactivex.subjects.PublishSubject
 import kotlinx.android.synthetic.main.activity_repositories.*
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.channels.ConflatedBroadcastChannel
-import kotlinx.coroutines.experimental.channels.consume
-import kotlinx.coroutines.experimental.channels.consumeEach
-import kotlinx.coroutines.experimental.delay
-import kotlinx.coroutines.experimental.launch
-import kotlinx.coroutines.experimental.reactive.publish
-import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.ConflatedBroadcastChannel
+import kotlinx.coroutines.channels.consumeEach
+import java.lang.Exception
 
-
+@UseExperimental(ExperimentalCoroutinesApi::class)
 class RepositoriesActivity : AppCompatActivity() {
 
 	var publishSubject: PublishSubject<String> = PublishSubject.create()
@@ -40,44 +35,39 @@ class RepositoriesActivity : AppCompatActivity() {
 		val reposNames = intent.extras.getStringArrayList("repos")
 		repos.adapter = ReposAdapter(ArrayList(reposNames), this@RepositoriesActivity)
 
-		val apiClientRxImpl = ApiClientRx.ApiClientRxImpl()
-		val apiClient = ApiClient.ApiClientImpl()
+		//val apiClientRxImpl = ApiClientRx.ApiClientRxImpl()
+		//val apiClient = ApiClient.ApiClientImpl()
+		val apiClient = RetrofitApiClientImpl()
 
-		launch(UI) {
-			broadcast.consumeEach { query ->
-				delay(300)
-				Log.d("TAG", "Query = ${query}")
-				val foundRepositories = apiClient.searchRepositories(query).await()
-				repos.adapter = ReposAdapter(
-									foundRepositories.map { it.full_name },
-							this@RepositoriesActivity)
-			}
-		}
-
-		publishSubject
-				.debounce(300, TimeUnit.MILLISECONDS)
-				.distinctUntilChanged()
-				.switchMap { searchQuery -> apiClientRxImpl.searchRepositories(searchQuery) }
-				.subscribeOn(Schedulers.io())
-				.observeOn(AndroidSchedulers.mainThread())
-				.subscribe({
-					repos.adapter = ReposAdapter(
-										it.map { it.full_name },
+		GlobalScope.launch(Dispatchers.Main) {
+			@UseExperimental(ObsoleteCoroutinesApi::class)
+				broadcast.consumeEach { query ->
+					delay(300)
+					Log.d("TAG", "Query = ${query}")
+					try {
+						val foundRepositories = apiClient.searchRepositories(query).await()
+						repos.adapter = ReposAdapter(
+								foundRepositories!!.map { it.full_name },
 								this@RepositoriesActivity)
-				})
-
-		searchQuery.addTextChangedListener(object: TextWatcher {
-			override fun afterTextChanged(s: Editable?) {
-				//publishSubject.onNext(s.toString())
-				broadcast.offer(s.toString())
+					}
+					catch (e: Exception) {
+						Log.d("Up4k!", e.message)
+					}
+				}
 			}
 
-			override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
-			}
+			searchQuery.addTextChangedListener(object: TextWatcher {
+				override fun afterTextChanged(s: Editable?) {
+					//publishSubject.onNext(s.toString())
+					broadcast.offer(s.toString())
+				}
 
-			override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-			}
-		})
+				override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+				}
+
+				override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+				}
+			})
 	}
 
 	class RepoViewHolder(view : View)  : RecyclerView.ViewHolder(view) {
@@ -87,13 +77,12 @@ class RepositoriesActivity : AppCompatActivity() {
 	}
 
 	class ReposAdapter(val reposNames: List<String>, val context: Context) : RecyclerView.Adapter<RepoViewHolder>() {
-
-		override fun onCreateViewHolder(parent: ViewGroup?, viewType: Int): RepoViewHolder {
+		override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RepoViewHolder {
 			val view = LayoutInflater.from(context).inflate(R.layout.repo_item, null)
 			return RepoViewHolder(view)
 		}
 
-		override fun onBindViewHolder(holder: RepoViewHolder?, position: Int) {
+		override fun onBindViewHolder(holder: RepoViewHolder, position: Int) {
 			holder!!.name.text = reposNames[position]
 		}
 
