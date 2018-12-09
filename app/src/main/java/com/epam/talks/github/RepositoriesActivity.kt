@@ -22,7 +22,6 @@ import kotlinx.coroutines.channels.ConflatedBroadcastChannel
 import kotlinx.coroutines.channels.consumeEach
 import java.lang.Exception
 
-@UseExperimental(ExperimentalCoroutinesApi::class)
 class RepositoriesActivity : AppCompatActivity() {
 
 	var publishSubject: PublishSubject<String> = PublishSubject.create()
@@ -40,14 +39,14 @@ class RepositoriesActivity : AppCompatActivity() {
 		val apiClient = RetrofitApiClientImpl()
 
 		GlobalScope.launch(Dispatchers.Main) {
-			@UseExperimental(ObsoleteCoroutinesApi::class)
 				broadcast.consumeEach { query ->
 					delay(300)
 					Log.d("TAG", "Query = ${query}")
 					try {
 						val foundRepositories = apiClient.searchRepositories(query).await()
-						repos.adapter = ReposAdapter(
-								foundRepositories!!.map { it.full_name },
+						if(foundRepositories != null)
+							repos.adapter = ReposAdapter(
+								foundRepositories.map { it.full_name },
 								this@RepositoriesActivity)
 					}
 					catch (e: Exception) {
