@@ -62,27 +62,21 @@ interface RetrofitApiClient {
 
 class RetrofitApiClientImpl {
 
-    suspend fun getUser(login: String, password: String): Deferred<GithubUser?> = withContext(Dispatchers.Default) {
-        async {
+    suspend fun getUser(login: String, password: String): GithubUser? = withContext(Dispatchers.Default) {
             val response = RetrofitApiClient.create(login, password).loginAndGetUser().await()
             if (response.code() != 200) {
                 throw RuntimeException("Incorrect login or password")
             }
             response.body()
-        }
     }
 
-    suspend fun searchRepositories(query: String): Deferred<List<GithubRepository>?> = withContext(Dispatchers.Default) {
-        async {
+    suspend fun searchRepositories(query: String): List<GithubRepository>? = withContext(Dispatchers.Default) {
             val response = RetrofitApiClient.create().searchRepositories(query).await().body()
-            return@async response!!.items
-        }
+        return@withContext response?.items ?: ArrayList()
     }
 
-    suspend fun getRepositories(url: String, login: String, password: String): Deferred<List<GithubRepository>?> = withContext(Dispatchers.Default) {
-        async {
+    suspend fun getRepositories(url: String, login: String, password: String): List<GithubRepository>? = withContext(Dispatchers.Default) {
             RetrofitApiClient.create(login, password).getRepositories(url).await().body()
-        }
     }
 }
 

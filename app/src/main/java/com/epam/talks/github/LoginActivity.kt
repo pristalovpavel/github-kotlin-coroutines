@@ -61,14 +61,14 @@ class LoginActivity : AppCompatActivity() {
         val login = email.text.toString()
         val pass = password.text.toString()
         val apiClient = SuspendingApiClient.SuspendingApiClientImpl()
-        GlobalScope.launch(Dispatchers.Main) {
+        CoroutineScope(Dispatchers.Main).launch {
             showProgress(true)
             val auth = BasicAuthorization(login, pass)
             try {
-                val userInfo = async(Dispatchers.IO) { apiClient.login(auth) }.await()
-                val repoUrl = userInfo!!.repos_url
-                val list = async(Dispatchers.IO) { apiClient.getRepositories(repoUrl, auth) }.await()
-                showRepositories(this@LoginActivity, list!!.map { it -> it.full_name })
+                val userInfo = withContext(Dispatchers.IO) { apiClient.login(auth) }
+                val repoUrl = userInfo.repos_url
+                val list = withContext(Dispatchers.IO) { apiClient.getRepositories(repoUrl, auth) }
+                showRepositories(this@LoginActivity, list.map { it -> it.full_name })
             } catch (e: Exception) {
                 Toast.makeText(this@LoginActivity, e.message, LENGTH_LONG).show()
             } finally {
@@ -81,7 +81,7 @@ class LoginActivity : AppCompatActivity() {
         val login = email.text.toString()
         val pass = password.text.toString()
         val apiClient = ApiClient.ApiClientImpl()
-        GlobalScope.launch(Dispatchers.Main) {
+        CoroutineScope(Dispatchers.Main).launch {
             showProgress(true)
             val auth = BasicAuthorization(login, pass)
             try {
@@ -89,9 +89,9 @@ class LoginActivity : AppCompatActivity() {
                 if (!isActive) {
                     return@launch
                 }
-                val repoUrl = userInfo!!.repos_url
+                val repoUrl = userInfo.repos_url
                 val list = apiClient.getRepositories(repoUrl, auth).await()
-                showRepositories(this@LoginActivity, list!!.map { it -> it.full_name })
+                showRepositories(this@LoginActivity, list.map { it -> it.full_name })
             } catch (e: Exception) {
                 Toast.makeText(this@LoginActivity, e.message, LENGTH_LONG).show()
             } finally {
@@ -106,14 +106,14 @@ class LoginActivity : AppCompatActivity() {
         val apiClient = RetrofitApiClientImpl()
 
         showProgress(true)
-        GlobalScope.launch(Dispatchers.Main) {
+        CoroutineScope(Dispatchers.Main).launch {
             try {
                 val userInfo = apiClient.getUser(login, pass)
                 if(!isActive) return@launch
 
-                val repoUrl = userInfo.await()!!.repos_url
-                var list = apiClient.getRepositories(repoUrl, login, pass).await()
-                var repos = list!!.map { it -> it.full_name }
+                val repoUrl = userInfo!!.repos_url
+                val list = apiClient.getRepositories(repoUrl, login, pass)
+                val repos = list!!.map { it -> it.full_name }
                 showRepositories(this@LoginActivity, repos)
             } catch (e: Exception) {
                 Toast.makeText(this@LoginActivity, e.message, LENGTH_LONG).show()
