@@ -15,12 +15,21 @@ import khttp.structures.authorization.BasicAuthorization
 import kotlinx.android.synthetic.main.activity_login.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
+import kotlin.coroutines.CoroutineContext
 
-class LoginActivity : AppCompatActivity() {
+class LoginActivity : AppCompatActivity(), CoroutineScope {
+
+    private lateinit var job: Job
+
+    override val coroutineContext: CoroutineContext
+        get() = Dispatchers.Main + job
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
+
+        job = Job()
+
         password.setOnEditorActionListener(TextView.OnEditorActionListener { _, id, _ ->
             if (id == EditorInfo.IME_ACTION_DONE || id == EditorInfo.IME_NULL) {
                 attemptLoginRetrofit()
@@ -34,6 +43,11 @@ class LoginActivity : AppCompatActivity() {
             //attemptLoginRx()
             attemptLoginRetrofit()
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        job.cancel() // Cancel job on activity destroy. After destroy all children jobs will be cancelled automatically
     }
 
     private fun attemptLoginRx() {
@@ -106,7 +120,7 @@ class LoginActivity : AppCompatActivity() {
         val apiClient = RetrofitApiClientImpl()
 
         showProgress(true)
-        CoroutineScope(Dispatchers.Main).launch {
+        launch {
             try {
                 val userInfo = apiClient.getUser(login, pass)
                 if(!isActive) return@launch
